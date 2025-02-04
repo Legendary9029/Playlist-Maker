@@ -1,7 +1,8 @@
-streamlit
-pandas
+streamlit~=1.38.0
+pandas~=2.2.2
 google-auth
 google-auth-oauthlib
 google-auth-httplib2
 google-api-python-client
 openpyxl
+tqdm

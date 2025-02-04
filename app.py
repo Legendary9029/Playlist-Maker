@@ -1,16 +1,46 @@
 import streamlit as st
 import os
-from backend import process_excel, export_playlist_to_excel, authenticate_youtube
+from youtube_backend import (
+    process_excel,
+    export_playlist_to_excel,
+    authenticate_youtube,
+    merge_playlists
+)
 
 st.set_page_config(page_title="YouTube Playlist Manager", layout="centered")
 
 st.title("🎵 YouTube Playlist Manager")
-st.write("Upload an Excel file to create a YouTube playlist or enter a YouTube playlist URL to export it.")
+st.write("Manage your YouTube playlists by merging, exporting, or creating new ones!")
 
 # Tabs for different functionalities
-tab1, tab2 = st.tabs(["📂 Create Playlist", "📥 Export Playlist"])
+tab1, tab2, tab3 = st.tabs(["🔀 Merge Playlists", "📂 Create Playlist", "📥 Export Playlist"])
 
 with tab1:
+    st.header("Merge YouTube Playlists")
+
+    youtube = authenticate_youtube()
+    playlist_urls = st.text_area(
+        "Enter YouTube Playlist URLs (one per line)",
+        placeholder="https://www.youtube.com/playlist?list=...\nhttps://www.youtube.com/playlist?list=..."
+    )
+
+    new_playlist_name = st.text_input("Enter New Playlist Name", placeholder="My Merged Playlist")
+    new_playlist_description = st.text_area("Enter Playlist Description", placeholder="A combined playlist")
+
+    manual_selection = st.checkbox("Select videos manually before merging")
+
+    if st.button("Merge Playlists"):
+        urls = [url.strip() for url in playlist_urls.split("\n") if url.strip()]
+
+        if len(urls) < 2:
+            st.error("Please enter at least two valid playlist URLs!")
+        elif not new_playlist_name:
+            st.error("Please enter a name for the new playlist!")
+        else:
+            result = merge_playlists(youtube, new_playlist_name, new_playlist_description, manual_selection)
+            st.success(result)
+
+with tab2:
     st.header("Create a YouTube Playlist from Excel")
 
     playlist_name = st.text_input("Enter Playlist Name", placeholder="My Playlist")
@@ -24,15 +54,11 @@ with tab1:
         elif not uploaded_file:
             st.error("Please upload an Excel file!")
         else:
-            file_path = os.path.join("uploads", uploaded_file.name)
-            os.makedirs("uploads", exist_ok=True)
-            with open(file_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-
-            result = process_excel(file_path, playlist_name, playlist_description)
+            # Read the file directly without saving it
+            result = process_excel(uploaded_file, playlist_name, playlist_description)
             st.success(result)
 
-with tab2:
+with tab3:
     st.header("Export a YouTube Playlist to Excel")
 
     playlist_url = st.text_input("Enter YouTube Playlist URL", placeholder="https://www.youtube.com/playlist?list=...")
@@ -41,11 +67,10 @@ with tab2:
         if not playlist_url:
             st.error("Please enter a playlist URL!")
         else:
-            youtube = authenticate_youtube()
             output_path = "exports/playlist_videos.xlsx"
             os.makedirs("exports", exist_ok=True)
 
-            result = export_playlist_to_excel(playlist_url, output_path)
+            result = export_playlist_to_excel(youtube, playlist_url, output_path)
             if "exported" in result:
                 with open(output_path, "rb") as f:
                     st.download_button(label="📥 Download Excel File", data=f, file_name="playlist_videos.xlsx")
