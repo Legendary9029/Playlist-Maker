@@ -12,13 +12,15 @@ st.set_page_config(page_title="YouTube Playlist Manager", layout="centered")
 st.title("🎵 YouTube Playlist Manager")
 st.write("Manage your YouTube playlists by merging, exporting, or creating new ones!")
 
+# Authenticate YouTube API once and reuse it
+youtube = authenticate_youtube()
+
 # Tabs for different functionalities
 tab1, tab2, tab3 = st.tabs(["🔀 Merge Playlists", "📂 Create Playlist", "📥 Export Playlist"])
 
 with tab1:
     st.header("Merge YouTube Playlists")
 
-    youtube = authenticate_youtube()
     playlist_urls = st.text_area(
         "Enter YouTube Playlist URLs (one per line)",
         placeholder="https://www.youtube.com/playlist?list=...\nhttps://www.youtube.com/playlist?list=..."
@@ -37,7 +39,9 @@ with tab1:
         elif not new_playlist_name:
             st.error("Please enter a name for the new playlist!")
         else:
-            result = merge_playlists(youtube, new_playlist_name, new_playlist_description, manual_selection)
+            result = merge_playlists(youtube, playlist_urls=urls, new_playlist_name=new_playlist_name,
+                                     new_playlist_description=new_playlist_description,
+                                     manual_selection=manual_selection)
             st.success(result)
 
 with tab2:
@@ -54,7 +58,6 @@ with tab2:
         elif not uploaded_file:
             st.error("Please upload an Excel file!")
         else:
-            # Read the file directly without saving it
             result = process_excel(uploaded_file, playlist_name, playlist_description)
             st.success(result)
 
