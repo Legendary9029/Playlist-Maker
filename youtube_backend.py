@@ -67,49 +67,6 @@ def add_video_to_playlist(youtube, playlist_id, video_id):
         }
     ).execute()
 
-
-def extract_video_id(url):
-    """Extracts a playlist ID or video ID from a YouTube URL."""
-    parsed_url = urlparse(url)
-    query_params = parse_qs(parsed_url.query)
-
-    if "list" in query_params:
-        return query_params["list"][0]  # Returns Playlist ID
-    elif "v" in query_params:
-        return query_params["v"][0]  # Returns Video ID
-    elif parsed_url.hostname in ["youtu.be", "www.youtu.be"]:
-        return parsed_url.path.lstrip("/")
-    return None
-
-
-
-def get_playlist_videos(youtube, playlist_id):
-    """Retrieve all video IDs from a YouTube playlist."""
-    video_ids = []
-    request = youtube.playlistItems().list(
-        part="snippet",
-        playlistId=playlist_id,
-        maxResults=50
-    )
-
-    while request:
-        response = request.execute()
-        if "items" not in response:
-            print(f"⚠️ No videos found in playlist {playlist_id} (check privacy settings).")
-            return []
-
-        for item in response.get("items", []):
-            video_ids.append({
-                "Title": item["snippet"]["title"],
-                "Video ID": item["snippet"]["resourceId"]["videoId"],
-                "Video URL": f"https://www.youtube.com/watch?v={item['snippet']['resourceId']['videoId']}"
-            })
-        request = youtube.playlistItems().list_next(request, response)
-
-    if not video_ids:
-        print(f"⚠️ Playlist {playlist_id} is empty or private.")
-    return video_ids
-
 def process_excel(uploaded_file, playlist_name, playlist_description):
     """Process an Excel file and add videos to the created playlist."""
     df = pd.read_excel(uploaded_file)
@@ -127,6 +84,18 @@ def process_excel(uploaded_file, playlist_name, playlist_description):
 
     return f"✅ Playlist '{playlist_name}' created successfully!"
 
+def extract_video_id(url):
+    """Extracts a playlist ID or video ID from a YouTube URL."""
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+
+    if "list" in query_params:
+        return query_params["list"][0]  # Returns Playlist ID
+    elif "v" in query_params:
+        return query_params["v"][0]  # Returns Video ID
+    elif parsed_url.hostname in ["youtu.be", "www.youtu.be"]:
+        return parsed_url.path.lstrip("/")
+    return None
 
 def export_playlist_to_excel(youtube, playlist_url, output_path="merged_playlist.xlsx"):
     """Export a YouTube playlist's videos to an Excel file."""
@@ -142,62 +111,72 @@ def export_playlist_to_excel(youtube, playlist_url, output_path="merged_playlist
     df.to_excel(output_path, index=False)
     return f"✅ Playlist exported to {output_path}"
 
+def extract_playlist_id(url):
+    """Extracts playlist ID from a YouTube playlist URL."""
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+    return query_params.get("list", [None])[0]  # Return Playlist ID if available
 
-def merge_playlists(youtube, playlist_urls, new_playlist_name, new_playlist_description, manual_selection=False):
-    """
-    Merge multiple playlists into a new one with a progress bar (Streamlit version).
-    """
-    st.header("Merge YouTube Playlists")
 
-    # User input for playlist URLs
-    playlist_urls = st.text_area("Enter YouTube playlist URLs (one per line):").strip().split("\n")
-    playlist_urls = [url.strip() for url in playlist_urls if url.strip() and "playlist?list=" in url]
+def get_playlist_videos(youtube, playlist_id):
+    """Retrieve all video IDs from a YouTube playlist."""
+    video_ids = []
+    request = youtube.playlistItems().list(
+        part="snippet",
+        playlistId=playlist_id,
+        maxResults=50
+    )
 
-    if st.button("Merge Playlists"):
-        if not playlist_urls:
-            st.error("No valid playlists provided. Operation cancelled.")
-            return
+    while request:
+        response = request.execute()
+        if "items" not in response:
+            st.warning(f"⚠️ No videos found in playlist {playlist_id} (check privacy settings).")
+            return []
 
-        video_list = []
-        valid_playlists = []
+        for item in response.get("items", []):
+            video_ids.append({
+                "Title": item["snippet"]["title"],
+                "Video ID": item["snippet"]["resourceId"]["videoId"],
+                "Video URL": f"https://www.youtube.com/watch?v={item['snippet']['resourceId']['videoId']}"
+            })
+        request = youtube.playlistItems().list_next(request, response)
 
-        for playlist_url in playlist_urls:
-            playlist_id = extract_video_id(playlist_url)
-            if not playlist_id:
-                st.warning(f"⚠️ Skipping invalid playlist URL: {playlist_url}")
-                continue
+    if not video_ids:
+        st.warning(f"⚠️ Playlist {playlist_id} is empty or private.")
+    return video_ids
 
-            videos = get_playlist_videos(youtube, playlist_id)
-            if not videos:
-                st.warning(f"⚠️ Skipping empty/private playlist: {playlist_url}")
-                continue
 
-            video_list.extend(videos)
-            valid_playlists.append({"id": playlist_id, "url": playlist_url, "videos": videos})
+def merge_playlists_auto(youtube, playlist_urls, new_playlist_name, new_playlist_description):
+    """Automatically merges all videos from selected playlists."""
+    st.write("Auto-merging playlists...")
 
-        if not valid_playlists:
-            st.error("No accessible playlists found. Check URLs and try again.")
-            return
+    if not playlist_urls:
+        return "❌ No playlist URLs provided."
 
-        # Manual selection option
-        if manual_selection:
-            st.subheader("✅ Select Videos to Add to the New Playlist")
-            selected_videos = []
-            for video in video_list:
-                if st.checkbox(f"{video['Title']} ({video['Video URL']})", key=video["Video ID"]):
-                    selected_videos.append(video)
-            video_list = selected_videos if selected_videos else video_list
+    video_list = []
+    for playlist_url in playlist_urls:
+        playlist_id = extract_playlist_id(playlist_url)
+        if not playlist_id:
+            st.warning(f"⚠️ Invalid playlist URL: {playlist_url}")
+            continue
 
-        # Create new playlist
-        new_playlist_id = create_playlist(youtube, new_playlist_name, new_playlist_description)
+        videos = get_playlist_videos(youtube, playlist_id)
+        if not videos:
+            st.warning(f"⚠️ Skipping empty/private playlist: {playlist_url}")
+            continue
 
-        # Progress bar
-        progress_bar = st.progress(0)
-        for i, video in enumerate(video_list):
-            add_video_to_playlist(youtube, new_playlist_id, video["Video ID"])
-            progress_bar.progress((i + 1) / len(video_list))
+        video_list.extend(videos)
 
-        # Export merged playlist
-        export_playlist_to_excel(video_list)
+    if not video_list:
+        return "❌ No accessible videos found. Check URLs and try again."
 
-        st.success(f"✅ New playlist '{new_playlist_name}' created with {len(video_list)} videos!")
+    # ✅ Create new playlist
+    new_playlist_id = create_playlist(youtube, new_playlist_name, new_playlist_description)
+
+    # ✅ Progress bar
+    progress_bar = st.progress(0)
+    for i, video in enumerate(video_list):
+        add_video_to_playlist(youtube, new_playlist_id, video["Video ID"])
+        progress_bar.progress((i + 1) / len(video_list))
+
+    return f"✅ New playlist '{new_playlist_name}' created with {len(video_list)} videos!"

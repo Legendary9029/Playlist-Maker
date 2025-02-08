@@ -1,104 +1,64 @@
-# 🎵 YouTube Playlist Manager
+# YouTube Playlist Manager
 
-Easily create YouTube playlists from an Excel file 📂 or export existing YouTube playlists to an Excel file 📥 using this simple tool built with Streamlit and the YouTube API! 🚀
+## 📌 Overview
+YouTube Playlist Manager is a **Streamlit-based web application** that allows users to **merge, create, and export YouTube playlists** efficiently. The application utilizes the **YouTube Data API** to automate playlist management tasks, enabling users to merge multiple public playlists, create new playlists from an Excel file, and export existing playlists to Excel.
 
----
+## 🚀 Features
+### 🔀 Merge Playlists
+- Automatically merges videos from multiple **public YouTube playlists** into a **new playlist**.
+- Requires no ownership of the original playlists.
+- Progress tracking with a real-time **progress bar**.
 
-## ✨ Features
-- ✅ **Create a YouTube playlist** from a list of video URLs in an Excel file (.xlsx)
-- ✅ **Export a YouTube playlist** to an Excel file for easy sharing or backup
-- ✅ **Simple UI** built with Streamlit 🎨
-- ✅ **OAuth 2.0 Authentication** for secure YouTube access 🔑
+### 📂 Create Playlist from Excel
+- Users can upload an Excel file (`.xlsx`) containing video links.
+- The app creates a new YouTube playlist with the provided videos.
 
----
+### 📥 Export Playlist to Excel
+- Exports the **video details** (title, video ID, etc.) from a YouTube playlist into an Excel file.
+- Users can download the file directly.
 
-## 📦 Installation
+## 🛠️ Installation
 
-First, clone this repository and navigate to the project directory:
+### 1️⃣ Clone the Repository
 ```sh
- git clone https://github.com/yourusername/youtube-playlist-manager.git
- cd youtube-playlist-manager
+git clone https://github.com/your-repo/youtube-playlist-manager.git
+cd youtube-playlist-manager
 ```
 
-Create a virtual environment (optional but recommended):
+### 2️⃣ Install Dependencies
 ```sh
- python -m venv venv
- source venv/bin/activate  # On macOS/Linux
- venv\Scripts\activate    # On Windows
+pip install -r requirements.txt
 ```
 
-Install the required dependencies:
+### 3️⃣ Set Up YouTube API Credentials
+- Create a **Google Cloud Project** and enable the **YouTube Data API v3**.
+- Generate **OAuth 2.0 Client ID** credentials.
+- Save your credentials as `client_secrets.json` in the project directory.
+
+### 4️⃣ Run the Application
 ```sh
- pip install -r requirements.txt
+streamlit run app.py
 ```
 
----
+## 🔧 Usage Guide
+1. **Authenticate** using your Google account when prompted.
+2. Navigate between tabs to **Merge Playlists, Create Playlists, or Export Playlists**.
+3. Provide necessary inputs (playlist URLs, Excel files, etc.) and click the action buttons.
+4. Download results if applicable.
 
-## 🔑 Setup Google API Credentials
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project and enable the **YouTube Data API v3**
-3. Set up **OAuth 2.0 Client ID** and download the `client_secret.json` file
-4. Place `client_secret.json` in the project folder
-
----
-
-## 🚀 Usage
-
-### 📝 1. Create a Playlist from Excel
-1. Run the app using:
-   ```sh
-   streamlit run app.py
-   ```
-2. Navigate to the **Create Playlist** tab 📂
-3. Enter a playlist name and description
-4. Upload an Excel file (`.xlsx`) with a **column named `URL`** containing YouTube video links
-5. Click **Create Playlist** and watch your playlist appear on YouTube! 🎶
-
-✅ **Example Excel File Format:**
-| URL                                      |
-|-----------------------------------------|
-| https://www.youtube.com/watch?v=abc123 |
-| https://www.youtube.com/watch?v=xyz789 |
-
-
-### 📥 2. Export a YouTube Playlist to Excel
-1. Navigate to the **Export Playlist** tab
-2. Paste the YouTube playlist URL (e.g., `https://www.youtube.com/playlist?list=PL1234567890`)
-3. Click **Export Playlist**
-4. Download the generated Excel file 📄
-
-✅ **Example Exported File Format:**
-| Title              | Video URL                                |
-|-------------------|-----------------------------------------|
-| My Favorite Song | https://www.youtube.com/watch?v=abc123 |
-| Another Hit      | https://www.youtube.com/watch?v=xyz789 |
-
----
-
-## 🛠️ Troubleshooting
-
-- **Getting `invalid_grant: Bad Request`?**
-  - Delete `token.json` and re-authenticate
-- **Blank playlist created?**
-  - Ensure URLs in the Excel file are valid YouTube links
-- **App crashes when uploading an Excel file?**
-  - Verify the Excel file contains a column named `URL`
-
----
-
-## 🏗️ Future Improvements
-- 🔄 **Edit existing playlists**
-- 🎨 **Better UI & progress tracking**
-- 📊 **Analytics on exported playlists**
-
----
+## 🏗️ Technologies Used
+- **Python** (Backend)
+- **Streamlit** (Web UI)
+- **YouTube Data API v3**
+- **Pandas** (Excel Processing)
+- **OAuth 2.0 Authentication**
 
 ## 📜 License
-This project is open-source under the **MIT License**. Feel free to modify and improve! 🎉
+This project is licensed under the MIT License.
 
----
+## 🤝 Contributing
+Feel free to submit **pull requests** or **report issues** to improve the project!
 
-## 💬 Support & Feedback
-If you find any bugs 🐞 or have feature requests, feel free to open an issue or contribute! 😊
+## 🌟 Acknowledgments
+Special thanks to the **YouTube API team** and **Streamlit community** for making this project possible!
 

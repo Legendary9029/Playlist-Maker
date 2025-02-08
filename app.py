@@ -4,7 +4,7 @@ from youtube_backend import (
     process_excel,
     export_playlist_to_excel,
     authenticate_youtube,
-    merge_playlists
+    merge_playlists_auto
 )
 
 st.set_page_config(page_title="YouTube Playlist Manager", layout="centered")
@@ -29,21 +29,16 @@ with tab1:
     new_playlist_name = st.text_input("Enter New Playlist Name", placeholder="My Merged Playlist")
     new_playlist_description = st.text_area("Enter Playlist Description", placeholder="A combined playlist")
 
-    manual_selection = st.checkbox("Select videos manually before merging")
-
-    if st.button("Merge Playlists"):
+    if st.button("🔄 Auto Merge"):
         urls = [url.strip() for url in playlist_urls.split("\n") if url.strip()]
-
         if len(urls) < 2:
             st.error("Please enter at least two valid playlist URLs!")
         elif not new_playlist_name:
             st.error("Please enter a name for the new playlist!")
         else:
-            result = merge_playlists(youtube, playlist_urls=urls, new_playlist_name=new_playlist_name,
-                                     new_playlist_description=new_playlist_description,
-                                     manual_selection=manual_selection)
+            result = merge_playlists_auto(youtube, playlist_urls=urls, new_playlist_name=new_playlist_name,
+                                          new_playlist_description=new_playlist_description)
             st.success(result)
-
 with tab2:
     st.header("Create a YouTube Playlist from Excel")
 
